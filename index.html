@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecosphere</title>
+<style>
+html { scroll-behavior: smooth; }
+body {
+  font-family: Arial, sans-serif;
+  background-color: #e8f1ee;
+  color: #10302b;
+  margin: 0;
+}
+header { background-color: white; text-align: center; padding: 15px; }
+header h1 { color: #1b6b5f; margin: 0; }
+
+/* ---------- STICKY navigation bar (sticky + z-index) ---------- */
+nav {
+  display: flex; justify-content: center; flex-wrap: wrap;
+  background: #10302b;
+  position: sticky; top: 0; z-index: 100;
+}
+nav a, nav button {
+  padding: 15px 18px;
+  color: white;
+  text-decoration: none;
+  background: #10302b;
+  border: none;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+}
+nav a:hover, nav button:hover { background: #1b6b5f; }
+
+/* ---------- Dropdown: RELATIVE parent + ABSOLUTE child ---------- */
+.dropdown { position: relative; }
+.content { display: none; position: absolute; top: 100%; left: 0; min-width: 200px; background: #0b221e; z-index: 110; }
+.content a { display: block; padding: 12px 18px; }
+.dropdown:hover .content, .dropdown:focus-within .content { display: block; }
+.apply { background: #1b6b5f; }
+
+.music { background-color: white; text-align: center; padding: 10px; }
+
+/* ---------- Banner with ABSOLUTE label on a RELATIVE hero ---------- */
+.hero { position: relative; }
+.banner { display: block; width: 100%; height: 300px; object-fit: cover; }
+.banner-label {
+  position: absolute; left: 20px; bottom: 20px; z-index: 2;
+  background: rgba(16, 48, 43, 0.85); color: white;
+  padding: 8px 14px; border-radius: 4px; font-weight: bold;
+}
+
+/* ---------- Page layout: sidebar + main ---------- */
+.layout {
+  display: flex; align-items: flex-start; gap: 20px;
+  width: 95%; max-width: 1200px; margin: 20px auto;
+}
+.sidebar {
+  flex: 0 0 170px;
+  position: sticky; top: 70px; z-index: 20;
+  background: white; padding: 12px; border-radius: 4px;
+}
+.sidebar h3 { margin: 0 0 8px 0; color: #1b6b5f; }
+.sidebar a { display: block; padding: 6px 0; color: #10302b; text-decoration: none; }
+.sidebar a:hover { color: #1b6b5f; text-decoration: underline; }
+main { flex: 1; min-width: 0; }
+
+/* ---------- QUADRANT layout (absolute positioning) ---------- */
+.media h2 { margin-top: 0; }
+.quadrants { position: relative; height: 660px; background: white; }
+.box {
+  position: absolute; width: 50%; height: 50%;
+  box-sizing: border-box; padding: 10px;
+  scroll-margin-top: 70px;
+}
+.box h3 { margin: 0 0 6px 0; }
+.box iframe, .box video { width: 100%; height: calc(100% - 34px); border: 0; }
+#pdf     { top: 0;    left: 0; }
+#youtube { top: 0;    right: 0; }
+#video   { bottom: 0; left: 0; }
+#map     { bottom: 0; right: 0; }
+
+/* ---------- CENTERED section (absolute + transform) ---------- */
+.center-badge {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  width: 90px; height: 90px; border-radius: 50%;
+  background: #1b6b5f; color: white; border: 4px solid white;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; font-weight: bold; font-size: 14px;
+}
+
+.form-section { width: 100%; max-width: 500px; margin: 30px auto; scroll-margin-top: 70px; }
+.form-section input,
+.form-section select,
+.form-section textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0 15px 0;
+  box-sizing: border-box;
+}
+
+/* ---------- RESPONSIVE GRID image gallery (CSS Grid + Flexbox) ---------- */
+.gallery-section { margin-top: 30px; scroll-margin-top: 70px; }
+.gallery-section h2 { margin-top: 0; }
+.gallery-intro { margin: 0 0 12px 0; }
+.gallery {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.gallery li { margin: 0; }
+.gallery li.wide { grid-column: span 2; }
+.gallery-item {
+  display: flex; flex-direction: column;          /* Flexbox inside each grid cell */
+  width: 100%; height: 100%; padding: 0;
+  background: white; border: 0; border-radius: 6px; overflow: hidden;
+  cursor: pointer; font: inherit; color: inherit; text-align: left;
+}
+.gallery-item img {
+  display: block; width: 100%; height: 180px; object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.gallery-item:hover img { transform: scale(1.05); }
+.gallery-item .cap { padding: 8px 10px; font-size: 14px; }
+.gallery-item:focus-visible { outline: 3px solid #1b6b5f; outline-offset: 2px; }
+
+/* ---------- Lightbox overlay ---------- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0, 0, 0, 0.88);
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px; box-sizing: border-box;
+}
+.lightbox.open { display: flex; }
+.lb-stage { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 1000px; }
+.lb-figure { flex: 1; margin: 0; text-align: center; color: white; min-width: 0; }
+.lb-figure img { max-width: 100%; max-height: 70vh; border-radius: 4px; }
+.lb-figure figcaption { margin-top: 10px; }
+.lb-btn {
+  background: #1b6b5f; color: white; border: 2px solid white; border-radius: 50%;
+  width: 44px; height: 44px; font-size: 22px; cursor: pointer; flex: none;
+}
+.lb-btn:hover { background: #10302b; }
+.lb-btn:focus-visible { outline: 3px solid #ffd54a; outline-offset: 2px; }
+.lb-close { position: absolute; top: 15px; right: 15px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .gallery-item img { transition: none; }
+}
+
+/* ---------- FIXED back-to-top button ---------- */
+.back-top {
+  position: fixed; right: 20px; bottom: 20px; z-index: 50;
+  background: #1b6b5f; color: white; text-decoration: none;
+  padding: 10px 14px; border-radius: 4px;
+}
+.back-top:hover { background: #10302b; }
+
+footer {
+  background-color: #10302b;
+  color: white;
+  text-align: center;
+  padding: 10px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 700px) {
+  nav { position: static; }
+  .content { position: static; }
+  .layout { flex-direction: column; }
+  .sidebar { position: static; flex: none; width: 100%; box-sizing: border-box; }
+  .quadrants { height: auto; background: none; }
+  .box { position: static; width: 100%; height: auto; padding: 0; margin-bottom: 15px; }
+  .box iframe, .box video { height: 280px; }
+  .center-badge { display: none; }
+  .banner-label { left: 10px; bottom: 10px; font-size: 14px; }
+}
+
+/* Gallery breakpoints: desktop 3 columns, tablet 2, mobile 1 */
+@media (max-width: 900px) {
+  .gallery { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+  .gallery { grid-template-columns: 1fr; }
+  .gallery li.wide { grid-column: auto; }
+  .lb-stage { gap: 6px; }
+  .lb-btn { width: 38px; height: 38px; }
+}
+</style>
+</head>
+<body>
+<header id="top">
+  <h1>Ecosphere</h1>
+  <p>Sustainable Supply Chain and Logistics</p>
+</header>
+
+<!-- Dropdown menu linked to the multimedia elements -->
+<nav>
+  <a href="#top-music">Audio</a>
+
+  <div class="dropdown">
+    <button type="button">Media &#8964;</button>
+    <div class="content">
+      <a href="#pdf">PDF Document</a>
+      <a href="#youtube">YouTube Video</a>
+      <a href="#video">Video File</a>
+      <a href="#map">Location Map</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <button type="button">Careers &#8964;</button>
+    <div class="content">
+      <a href="#application" data-role="Supply Chain Analyst">Supply Chain Analyst</a>
+      <a href="#application" data-role="Fleet Sustainability Coordinator">Fleet Sustainability Coordinator</a>
+      <a href="#application" data-role="Warehouse Operations">Warehouse Operations</a>
+    </div>
+  </div>
+
+  <a href="#gallery">Gallery</a>
+
+  <a href="#application" class="apply">Apply Now</a>
+</nav>
+
+<div class="music" id="top-music">
+  <p>Play Music</p>
+  <audio controls>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+</div>
+
+<div class="hero">
+  <img class="banner"
+       src="https://placehold.co/1200x300/1b6b5f/ffffff?text=Ecosphere+-+Sustainable+Logistics"
+       alt="Ecosphere banner">
+  <span class="banner-label">Greener Logistics, Cleaner Future</span>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h3>Quick Links</h3>
+    <a href="#top-music">Audio</a>
+    <a href="#pdf">PDF Document</a>
+    <a href="#youtube">YouTube Video</a>
+    <a href="#video">Video File</a>
+    <a href="#map">Location Map</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#application">Apply Now</a>
+  </aside>
+
+  <main>
+    <div class="media" id="media">
+      <h2>Media Elements</h2>
+
+      <div class="quadrants">
+        <div class="box" id="pdf">
+          <h3>PDF Document</h3>
+          <iframe src="Ecosphere.pdf" title="Ecosphere PDF"></iframe>
+        </div>
+
+        <div class="box" id="youtube">
+          <h3>YouTube Video</h3>
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/LgnXizpZ2GY?si=__FajC4UhPRYcaBk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+
+        <div class="box" id="video">
+          <h3>Video File</h3>
+          <video controls>
+            <source src="ecosphere.mp4" type="video/mp4">
+            <source src="ecosphere.ogg" type="video/ogg">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <div class="box" id="map">
+          <h3>Location Map</h3>
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3917.3598830116985!2d76.74148607536158!3d10.936163989222454!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba866bd6aaaaaab%3A0xc650b8a75e7b51f0!2sKarunya%20Institute%20of%20Technology%20and%20Sciences%20(Deemed%20University)!5e0!3m2!1sen!2sin!4v1790841741287!5m2!1sen!2sin"
+                  title="Ecosphere location" allowfullscreen loading="lazy"></iframe>
+        </div>
+
+        <div class="center-badge">Ecosphere Media</div>
+      </div>
+    </div>
+
+    <section class="gallery-section" id="gallery" aria-labelledby="gallery-title">
+      <h2 id="gallery-title">Image Gallery</h2>
+      <p class="gallery-intro">Select an image to view it larger. Use the arrow keys to browse and Esc to close.</p>
+      <ul class="gallery">
+        <li class="wide">
+          <button type="button" class="gallery-item" data-full="https://placehold.co/1200x800/1b6b5f/ffffff?text=Electric+Fleet" data-caption="Electric Fleet">
+            <img src="electric-fleet.jpg" width="600" height="400" loading="lazy" decoding="async" alt="Electric Fleet - Ecosphere sustainable logistics">
+            <span class="cap">Electric Fleet</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="gallery-item" data-full="https://placehold.co/1200x800/2e8b57/ffffff?text=Solar+Warehouse" data-caption="Solar Warehouse">
+            <img src="solar-warehouse.jpg" width="600" height="400" loading="lazy" decoding="async" alt="Solar Warehouse - Ecosphere sustainable logistics">
+            <span class="cap">Solar Warehouse</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="gallery-item" data-full="https://placehold.co/1200x800/0b221e/ffffff?text=Rail+Freight" data-caption="Rail Freight">
+            <img src="rail-freight.jpg" width="600" height="400" loading="lazy" decoding="async" alt="Rail Freight - Ecosphere sustainable logistics">
+            <span class="cap">Rail Freight</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="gallery-item" data-full="https://placehold.co/1200x800/3a7d8c/ffffff?text=Green+Port" data-caption="Green Port">
+            <img src="green-port.jpg" width="600" height="400" loading="lazy" decoding="async" alt="Green Port - Ecosphere sustainable logistics">
+            <span class="cap">Green Port</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="gallery-item" data-full="https://placehold.co/1200x800/5b8a3c/ffffff?text=Route+Optimization" data-caption="Route Optimization">
+            <img src="route-optimization.jpg" width="600" height="400" loading="lazy" decoding="async" alt="Route Optimization - Ecosphere sustainable logistics">
+            <span class="cap">Route Optimization</span>
+          </button>
+        </li>
+        <li class="wide">
+          <button type="button" class="gallery-item" data-full="https://placehold.co/1200x800/1f5f4a/ffffff?text=Recycling+Hub" data-caption="Recycling Hub">
+            <img src="recycling-hub.jpg" width="600" height="400" loading="lazy" decoding="async" alt="Recycling Hub - Ecosphere sustainable logistics">
+            <span class="cap">Recycling Hub</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <div class="form-section" id="application">
+      <h2>Application Form</h2>
+      <form action="#" method="post">
+        <label for="fullname">Full Name</label>
+        <input type="text" id="fullname" name="fullname" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option>Supply Chain Analyst</option>
+          <option>Fleet Sustainability Coordinator</option>
+          <option>Warehouse Operations</option>
+        </select>
+
+        <label for="reason">Why do you want to join Ecosphere?</label>
+        <textarea id="reason" name="reason" rows="4"></textarea>
+
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<!-- Lightbox for the gallery -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" hidden>
+  <button type="button" class="lb-btn lb-close" id="lb-close" aria-label="Close image viewer">&times;</button>
+  <div class="lb-stage">
+    <button type="button" class="lb-btn" id="lb-prev" aria-label="Previous image">&#8249;</button>
+    <figure class="lb-figure">
+      <img id="lb-img" src="" alt="">
+      <figcaption id="lb-cap"></figcaption>
+    </figure>
+    <button type="button" class="lb-btn" id="lb-next" aria-label="Next image">&#8250;</button>
+  </div>
+</div>
+
+<a href="#top" class="back-top">&uarr; Top</a>
+
+<footer>
+  <p>&copy; 2026 Ecosphere</p>
+</footer>
+
+<script>
+// Picking a role in the Careers dropdown pre-selects it in the form
+document.querySelectorAll('[data-role]').forEach(function (link) {
+  link.addEventListener('click', function () {
+    document.getElementById('role').value = link.dataset.role;
+  });
+});
+// Lightbox for the image gallery
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('.gallery-item'));
+  var box = document.getElementById('lightbox');
+  var img = document.getElementById('lb-img');
+  var cap = document.getElementById('lb-cap');
+  var btnClose = document.getElementById('lb-close');
+  var btnPrev = document.getElementById('lb-prev');
+  var btnNext = document.getElementById('lb-next');
+  var current = 0;
+
+  function show(i) {
+    current = (i + items.length) % items.length;
+    var it = items[current];
+    img.src = it.dataset.full;
+    img.alt = it.querySelector('img').alt;
+    cap.textContent = it.dataset.caption;
+  }
+  function open(i) {
+    show(i);
+    box.hidden = false;
+    box.classList.add('open');
+    btnClose.focus();
+  }
+  function close() {
+    box.classList.remove('open');
+    box.hidden = true;
+    items[current].focus();   // return focus to the thumbnail
+  }
+
+  items.forEach(function (it, i) {
+    it.addEventListener('click', function () { open(i); });
+  });
+  btnClose.addEventListener('click', close);
+  btnPrev.addEventListener('click', function () { show(current - 1); });
+  btnNext.addEventListener('click', function () { show(current + 1); });
+  box.addEventListener('click', function (e) { if (e.target === box) close(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (box.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') show(current - 1);
+    else if (e.key === 'ArrowRight') show(current + 1);
+    else if (e.key === 'Tab') {            // keep focus inside the dialog
+      var f = [btnClose, btnPrev, btnNext];
+      var idx = f.indexOf(document.activeElement);
+      e.preventDefault();
+      f[(idx + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
